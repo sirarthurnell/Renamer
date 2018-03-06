@@ -171,7 +171,7 @@ namespace Renamer
         {
             Console.WriteLine("Specify the path to explore and the name to replace in this way:");
             Console.WriteLine();
-            Console.WriteLine(@"<path\to\directory> <nameToReplace> <newName>");
+            Console.WriteLine(@"<path\to\directory> <nameToReplace> <newName> [excludeName...]");
             Console.WriteLine();
             Console.WriteLine("Subdirectories will be explored too.");
         }
