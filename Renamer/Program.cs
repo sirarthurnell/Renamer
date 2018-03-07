@@ -30,14 +30,12 @@ namespace Renamer
             {
                 try
                 {
-                    var search = ParseArguments(args);                    
-                    var entries = ReportSearch(search);
+                    var argumentParser = new ArgumentParser(args);
+                    var configuration = argumentParser.Parse();
+                    var entries = ReportSearch(configuration.PreparedSearch);
                     if (AskIfSure())
                     {
-                        var from = args[1];
-                        var to = args[2];
-
-                        PerformRename(entries, from, to);
+                        PerformRename(entries, configuration.From, configuration.To);
                     }
                 }
                 catch (Exception ex)
@@ -76,69 +74,11 @@ namespace Renamer
                 Console.WriteLine(entry.Path);
             }
 
+            Console.WriteLine();
             Console.WriteLine("{0} elements will be parsed.", entries.Count());
 
             return entries;
-        }
-
-        /// <summary>
-        /// Parsea los argumentos introducidos por el usuario.
-        /// </summary>
-        /// <param name="args">Argumentos introducidos.</param>
-        /// <returns>Búsqueda configurada acorde con los
-        /// parámetros.</returns>
-        private static Search ParseArguments(string[] args)
-        {
-            if (args.Length != 3 && args.Length != 4)
-            {
-                throw new ArgumentException("Arguments not specified correctly.");
-            }
-
-            var path = args[0];
-            var pathValidator = new PathValidator();
-            var pathResult = pathValidator.ValidatePath(path, true);
-            if (!pathResult.Valid)
-            {
-                throw new ArgumentException(pathResult.Reason);
-            }
-
-            var from = args[1];
-            var fromResult = pathValidator.ValidateFileName(from);
-            if (!fromResult.Valid)
-            {
-                throw new ArgumentException(pathResult.Reason);
-            }
-
-            var to = args[2];
-            var toResult = pathValidator.ValidateFileName(to);
-            if (!toResult.Valid)
-            {
-                throw new ArgumentException(pathResult.Reason);
-            }
-
-            Search search = null;
-
-            if (args.Length == 4)
-            {
-                var exclusions = args[3].Split(new char[]{','}, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var exclusion in exclusions)
-                {
-                    var exclusionResult = pathValidator.ValidatePath(exclusion, false);
-                    if (!exclusionResult.Valid)
-                    {
-                        throw new ArgumentException(string.Format("Exclusion \"{0}\" is not a valid filename.", exclusion));
-                    }
-                }
-
-                search = new Search(path, exclusions.ToList());
-            }
-            else
-            {
-                search = new Search(path);
-            }
-
-            return search;
-        }
+        }        
 
         /// <summary>
         /// Pregunta al usuario si quiere continuar.
@@ -171,7 +111,7 @@ namespace Renamer
         {
             Console.WriteLine("Specify the path to explore and the name to replace in this way:");
             Console.WriteLine();
-            Console.WriteLine(@"<path\to\directory> <nameToReplace> <newName> [excludeName...]");
+            Console.WriteLine("path\\to\\directory --change nameToReplace // newName [--exclude \"nameToExclude,...\"]");
             Console.WriteLine();
             Console.WriteLine("Subdirectories will be explored too.");
         }
