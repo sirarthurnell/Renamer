@@ -128,6 +128,11 @@ namespace Renamer
                 }
             }
 
+            if (changeResult == null)
+            {
+                throw new ArgumentParseException("--change argument is required");
+            }
+
             Search search;
 
             if (excludeResult == null)
