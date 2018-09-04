@@ -286,7 +286,7 @@ namespace Renamer
         private EmitBomParseResult ParseEmitBomArgument(int startIndex)
         {
             var header = startIndex;
-            var emitBom = _args[++header];
+            var emitBom = _args[header];
 
             var results = new EmitBomParseResult
             {
