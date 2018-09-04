@@ -25,6 +25,7 @@ namespace RenamerLogic
         private List<string> _filePaths;
         private string _from;
         private string _to;
+        private bool _emitBom;
 
         /// <summary>
         /// Crea una nueva instancia de TextReplacementBatch.
@@ -33,11 +34,13 @@ namespace RenamerLogic
         /// en los que se va a realizar el reemplazo.</param>
         /// <param name="from">Cadena a reemplazar.</param>
         /// <param name="to">Cadena que reemplaza.</param>
-        public TextReplacementBatch(IEnumerable<string> filePaths, string from, string to)
+        /// <param name="emitBom">Indica si se ha de emitir BOM.</param>
+        public TextReplacementBatch(IEnumerable<string> filePaths, string from, string to, bool emitBom)
         {
             _filePaths = new List<string>(filePaths);
             _from = from;
             _to = to;
+            _emitBom = emitBom;
         }
 
         /// <summary>
@@ -58,10 +61,10 @@ namespace RenamerLogic
                     }
                     else
                     {
-                        var replacement = new TextReplacement(batchEntry.Path, batchEntry.From, batchEntry.To);
+                        var replacement = new TextReplacement(batchEntry.Path, batchEntry.From, batchEntry.To, _emitBom);
                         replacement.Perform();
                     }
-                }, 
+                },
                 new BatchEntry() { Path = _filePaths[i], From = _from, To = _to });
             }
 

@@ -10,11 +10,12 @@ namespace RenamerLogic
     /// <summary>
     /// Lleva a cabo el proceso de renombrado.
     /// </summary>
-    public class Rename
+    public class Renaming
     {
         private IEnumerable<FileSystemEntry> _entriesToRename;
         private string _from;
         private string _to;
+        private bool _emitBom;
 
         /// <summary>
         /// Crea una nueva instancia de Rename.
@@ -23,11 +24,13 @@ namespace RenamerLogic
         /// y directorios sobre los que realizar el renombrado.</param>
         /// <param name="from">Cadena a sustituir.</param>
         /// <param name="to">Cadena que sustituye.</param>
-        public Rename(IEnumerable<FileSystemEntry> entriesToRename, string from, string to)
+        /// <param name="emitBom">Indica si se ha de emitir BOM.</param>
+        public Renaming(IEnumerable<FileSystemEntry> entriesToRename, string from, string to, bool emitBom)
         {
             _entriesToRename = entriesToRename;
             _from = from;
             _to = to;
+            _emitBom = emitBom;
         }
 
         /// <summary>
@@ -57,14 +60,14 @@ namespace RenamerLogic
         {
             var inverseOrderedFilePaths = filePaths.OrderByDescending(f => f.Length);
 
-            var batch = new TextReplacementBatch(inverseOrderedFilePaths, _from, _to);
+            var batch = new TextReplacementBatch(inverseOrderedFilePaths, _from, _to, _emitBom);
             batch.Perform();
 
             inverseOrderedFilePaths
                 .ToList()
                 .ForEach(f => RenameFile(f));
         }
-        
+
         /// <summary>
         /// Reemplaza el nombre del archivo.
         /// </summary>
@@ -91,18 +94,19 @@ namespace RenamerLogic
             directoryPaths
                 .OrderByDescending(d => d.Length)
                 .ToList()
-                .ForEach(directoryPath => {
-
-                var directoryName = Path.GetFileName(directoryPath);
-
-                if (IsMatch(directoryName))
+                .ForEach(directoryPath =>
                 {
-                    var newDirectoryName = directoryName.Replace(_from, _to);
-                    var newPath = ReplaceLastSegment(directoryPath, directoryName, newDirectoryName);
-                    Directory.Move(directoryPath, newPath);
-                }
 
-            });            
+                    var directoryName = Path.GetFileName(directoryPath);
+
+                    if (IsMatch(directoryName))
+                    {
+                        var newDirectoryName = directoryName.Replace(_from, _to);
+                        var newPath = ReplaceLastSegment(directoryPath, directoryName, newDirectoryName);
+                        Directory.Move(directoryPath, newPath);
+                    }
+
+                });
         }
 
         /// <summary>

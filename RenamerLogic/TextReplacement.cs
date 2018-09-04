@@ -15,6 +15,7 @@ namespace RenamerLogic
         private string _filePath;
         private string _from;
         private string _to;
+        private bool _emitBom;
 
         /// <summary>
         /// Crea una nueva instancia de TextReplacement.
@@ -22,11 +23,13 @@ namespace RenamerLogic
         /// <param name="filePath">Ruta al archivo a procesar.</param>
         /// <param name="from">Texto a cambiar.</param>
         /// <param name="to">Texto que sustituye al anterior.</param>
-        public TextReplacement(string filePath, string from, string to)
+        /// <param name="emitBom">Indica si se ha de emitir BOM.</param>
+        public TextReplacement(string filePath, string from, string to, bool emitBom)
         {
             _filePath = filePath;
             _from = from;
             _to = to;
+            _emitBom = emitBom;
         }
 
         /// <summary>
@@ -53,6 +56,7 @@ namespace RenamerLogic
         {
             var contents = string.Empty;
             var newContents = string.Empty;
+            var utf8WithoutBom = new UTF8Encoding(_emitBom);
 
             using (var reader = new StreamReader(_filePath))
             {
@@ -61,7 +65,7 @@ namespace RenamerLogic
 
             newContents = contents.Replace(_from, _to);
 
-            using (var writer = new StreamWriter(_filePath, false, Encoding.UTF8))
+            using (var writer = new StreamWriter(_filePath, false, utf8WithoutBom))
             {
                 writer.Write(newContents);
             }

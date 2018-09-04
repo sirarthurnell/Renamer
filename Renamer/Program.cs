@@ -30,19 +30,31 @@ namespace Renamer
             {
                 try
                 {
-                    var argumentParser = new ArgumentParser(args);
-                    var configuration = argumentParser.Parse();
+                    var configuration = CreateConfigurationFromArguments(args);
                     var entries = ReportSearch(configuration.PreparedSearch);
                     if (AskIfSure())
                     {
-                        PerformRename(entries, configuration.From, configuration.To);
+                        PerformRenaming(entries, configuration.From, configuration.To, configuration.EmitBom);
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
-            }            
+            }
+        }
+
+        /// <summary>
+        /// Crea una configuración de ejecución a partir
+        /// de los argumentos introducidos por el usuario.
+        /// </summary>
+        /// <param name="args">Argumentos introducidos.</param>
+        /// <returns>Configuración creada.</returns>
+        private static RenamingConfiguration CreateConfigurationFromArguments(string[] args)
+        {
+            var argumentParser = new ArgumentParser(args);
+            var configuration = argumentParser.Parse();
+            return configuration;
         }
 
         /// <summary>
@@ -50,11 +62,11 @@ namespace Renamer
         /// y directorios.
         /// </summary>
         /// <param name="entries">Entradas a parsear.</param>
-        private static void PerformRename(IEnumerable<FileSystemEntry> entries, string from, string to)
+        private static void PerformRenaming(IEnumerable<FileSystemEntry> entries, string from, string to, bool emitBom)
         {
             Console.WriteLine("Renaming...");
 
-            var rename = new Rename(entries, from, to);
+            var rename = new Renaming(entries, from, to, emitBom);
             rename.Perform();
 
             Console.WriteLine("Rename completed.");
@@ -78,7 +90,7 @@ namespace Renamer
             Console.WriteLine("{0} elements will be parsed.", entries.Count());
 
             return entries;
-        }        
+        }
 
         /// <summary>
         /// Pregunta al usuario si quiere continuar.
@@ -111,7 +123,7 @@ namespace Renamer
         {
             Console.WriteLine("Specify the path to explore and the name to replace in this way:");
             Console.WriteLine();
-            Console.WriteLine("path\\to\\directory --change nameToReplace // newName [--exclude \"nameToExclude,...\"]");
+            Console.WriteLine("path\\to\\directory --change nameToReplace // newName [--exclude \"nameToExclude,...\"][--emitbom]");
             Console.WriteLine();
             Console.WriteLine("Subdirectories will be explored too.");
         }

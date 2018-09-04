@@ -16,6 +16,7 @@ namespace Renamer
         public Search PreparedSearch { get; set; }
         public string From { get; set; }
         public string To { get; set; }
+        public bool EmitBom { get; set; }
     }
 
     /// <summary>
@@ -68,6 +69,15 @@ namespace Renamer
             public IEnumerable<string> Exclude { get; set; }
         }
 
+        /// <summary>
+        /// Resultado de parsear el argumento
+        /// emitBom.
+        /// </summary>
+        private class EmitBomParseResult : ParseResult
+        {
+            public bool EmitBom { get; set; }
+        }
+
         private string[] _args;
         private PathValidator _pathValidator;
 
@@ -95,6 +105,7 @@ namespace Renamer
 
             ChangeParseResult changeResult = null;
             ExcludeParseResult excludeResult = null;
+            EmitBomParseResult emitBomResult = null;
 
             for (; i < _args.Length; i++)
             {
@@ -116,6 +127,11 @@ namespace Renamer
                         case "exclude":
                             excludeResult = ParseExcludeArgument(i);
                             i = excludeResult.NextIndex;
+                            break;
+
+                        case "emitbom":
+                            emitBomResult = ParseEmitBomArgument(i);
+                            i = emitBomResult.NextIndex;
                             break;
 
                         default:
@@ -144,11 +160,18 @@ namespace Renamer
                 search = new Search(pathResult.Path, excludeResult.Exclude);
             }
 
+            bool emitBom = false;
+            if (emitBomResult != null)
+            {
+                emitBom = true;
+            }
+
             return new RenamingConfiguration
             {
                 PreparedSearch = search,
                 From = changeResult.From,
-                To = changeResult.To
+                To = changeResult.To,
+                EmitBom = emitBom
             };
         }
 
@@ -206,8 +229,8 @@ namespace Renamer
                 var areValidNames = IsValidName(from) && IsValidName(to);
                 if (areValidNames)
                 {
-                    var areValidFileNames = 
-                        _pathValidator.ValidateFileName(from).Valid && 
+                    var areValidFileNames =
+                        _pathValidator.ValidateFileName(from).Valid &&
                         _pathValidator.ValidateFileName(to).Valid;
 
                     if (areValidFileNames)
@@ -224,7 +247,7 @@ namespace Renamer
                 }
             }
 
-            throw new ArgumentParseException("Badformed --change argument. It should have this format: FROM -> TO, where FROM and TO must be valid filenames.");
+            throw new ArgumentParseException("Badformed --change argument. It should have this format: FROM // TO, where FROM and TO must be valid filenames.");
         }
 
         /// <summary>
@@ -252,6 +275,26 @@ namespace Renamer
             }
 
             throw new ArgumentParseException("Badformed --exclude argument. It should have this format: \"EXCLUDE1, EXCLUDE2...\"");
+        }
+
+        /// <summary>
+        /// Parsea el argumento de emitBom.
+        /// </summary>
+        /// <param name="startIndex">Índice en el que
+        /// comienza el argumento.</param>
+        /// <returns>Resultado del parseo.</returns>
+        private EmitBomParseResult ParseEmitBomArgument(int startIndex)
+        {
+            var header = startIndex;
+            var emitBom = _args[++header];
+
+            var results = new EmitBomParseResult
+            {
+                EmitBom = true,
+                NextIndex = header
+            };
+
+            return results;
         }
 
         /// <summary>
